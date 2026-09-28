@@ -105,6 +105,7 @@ class SettingsWindow( QWidget ):
         
     def make_general_tab( self ):
         general_layout = QVBoxLayout( self.general_tab )
+
         self.cb_top = QCheckBox( "Always on Top (HUD)" )
         self.cb_top.setChecked( True )
         self.cb_top.stateChanged.connect( self.emit_settings )
@@ -435,16 +436,22 @@ class SettingsWindow( QWidget ):
         return {
             "clock_enabled": self.clock_enabled.isChecked(),
             "clock_24h": self.clock_24h.isChecked(),
-            "clock_x": self.clock_x.value(), "clock_y": self.clock_y.value(), "clock_z": self.clock_z.value(),
-            "clock_font_family": self.clock_font.currentText(), "clock_font_size": self.clock_font_size.value(),
+            "clock_x": self.clock_x.value(),
+            "clock_y": self.clock_y.value(),
+            "clock_z": self.clock_z.value(),
+            "clock_font_family": self.clock_font.currentText(),
+            "clock_font_size": self.clock_font_size.value(),
             "clock_color": rgb_to_hex( self.clock_color_r.value(), self.clock_color_g.value(), self.clock_color_b.value() ),
             "clock_opacity": self.clock_opacity.value(),
 
             "bar_mirror_vertical": self.bar_mirror_vertical.isChecked(),
             "bar_mirror_horizontal": self.bar_mirror_horizontal.isChecked(),
             "bar_mirror_both": self.bar_mirror_both.isChecked(),
-            "bar_x": self.bar_x.value(), "bar_y": self.bar_y.value(), "bar_z": self.bar_z.value(),
-            "bar_height": self.bar_height.value(), "bar_total_width": self.bar_total_width.value(),
+            "bar_x": self.bar_x.value(),
+            "bar_y": self.bar_y.value(),
+            "bar_z": self.bar_z.value(),
+            "bar_height": self.bar_height.value(),
+            "bar_total_width": self.bar_total_width.value(),
             "bar_color": rgb_to_hex( self.bar_color_r.value(), self.bar_color_g.value(), self.bar_color_b.value() ),
             "bar_opacity": self.bar_opacity.value(),
         }
@@ -469,22 +476,31 @@ class SettingsWindow( QWidget ):
         self.combo_device.blockSignals( True )
         self.combo_device.clear()
         self.combo_device.addItems( devices )
-        if current in devices: self.combo_device.setCurrentText( current )
+        if current in devices:
+            self.combo_device.setCurrentText( current )
         self.combo_device.blockSignals( False )
-        if self.combo_device.currentText(): self.device_changed.emit( self.combo_device.currentText() )
+        if self.combo_device.currentText():
+            self.device_changed.emit( self.combo_device.currentText() )
 
     def emit_settings( self ):
-        self.settings_changed.emit( self.cb_top.isChecked(), self.cb_ignore.isChecked(), )
+        self.settings_changed.emit(
+            self.cb_top.isChecked(),
+            self.cb_ignore.isChecked(),
+        )
 
     def emit_audio_params( self ):
-        self.audio_params_changed.emit( self.spin_bars.value(), self.spin_sens.value(), self.spin_fps.value(), )
+        self.audio_params_changed.emit(
+            self.spin_bars.value(),
+            self.spin_sens.value(),
+            self.spin_fps.value(),
+        )
 
     def update_audio_stats( self, actual_fps, output_bands, nonempty_bands ):
         self.audio_stats.setText( f"Actual: {actual_fps:.1f} FPS | Bands: {nonempty_bands}/{output_bands}" )
 
 
 class HUDCanvas( QWidget ):
-    
+
     def __init__( self ):
         super().__init__()
         self.audio_bands = [ 0 ] * 100
@@ -508,7 +524,8 @@ class HUDCanvas( QWidget ):
         painter.setRenderHint( QPainter.RenderHint.Antialiasing, False )
 
         def draw_clock():
-            if not self.style.get( "clock_enabled", True ): return
+            if not self.style.get( "clock_enabled", True ):
+                return
             fmt = "%H:%M:%S" if self.style.get( "clock_24h", True ) else "%I:%M:%S %p"
             clock_text = datetime.datetime.now().strftime( fmt )
             clock_color = QColor( self.style[ "clock_color" ] )
@@ -523,7 +540,8 @@ class HUDCanvas( QWidget ):
 
         def draw_bars():
             bands = self.audio_bands
-            if not bands: return
+            if not bands:
+                return
             mirror_v = self.style.get( "bar_mirror_vertical", False )
             mirror_h = self.style.get( "bar_mirror_horizontal", False )
             mirror_both = self.style.get( "bar_mirror_both", False )
@@ -550,9 +568,12 @@ class HUDCanvas( QWidget ):
                     painter.fillRect( round( x ), round( y ), max( 1, round( bar_width ) ), round( bar_height ), color )
 
             draw_quadrant( columns - 1, 0, False, False )
-            if mirror_h: draw_quadrant( 0, 0, True, False )
-            if mirror_v: draw_quadrant( columns - 1, rows - 1, False, True )
-            if mirror_both: draw_quadrant( 0, rows - 1, True, True )
+            if mirror_h:
+                draw_quadrant( 0, 0, True, False )
+            if mirror_v:
+                draw_quadrant( columns - 1, rows - 1, False, True )
+            if mirror_both:
+                draw_quadrant( 0, rows - 1, True, True )
 
         layers = sorted(
             ( ( self.style.get( "clock_z", 0 ), draw_clock ), ( self.style.get( "bar_z", 0 ), draw_bars ) ), key = lambda layer: layer[ 0 ], )
@@ -561,6 +582,7 @@ class HUDCanvas( QWidget ):
 
 
 class HUDWindow( QMainWindow ):
+
     def __init__( self, settings_window ):
         super().__init__()
         self.settings_window = settings_window
@@ -574,8 +596,10 @@ class HUDWindow( QMainWindow ):
 
     def apply_flags( self, always_on_top, ignore_inputs ):
         flags = self.base_flags
-        if always_on_top: flags |= Qt.WindowType.WindowStaysOnTopHint
-        if ignore_inputs: flags |= Qt.WindowType.WindowTransparentForInput
+        if always_on_top:
+            flags |= Qt.WindowType.WindowStaysOnTopHint
+        if ignore_inputs:
+            flags |= Qt.WindowType.WindowTransparentForInput
         self.hide()
         self.setWindowFlags( flags )
         self.show()
@@ -590,8 +614,10 @@ class HUDWindow( QMainWindow ):
 
     def handle_action( self, action ):
         if action == "toggle_maximize":
-            if self.isMaximized(): self.showNormal()
-            else: self.showMaximized()
+            if self.isMaximized():
+                self.showNormal()
+            else:
+                self.showMaximized()
             return
         if action in ( "center_window_x", "center_window_y" ):
             self.center_window( action )
@@ -599,27 +625,42 @@ class HUDWindow( QMainWindow ):
         if action in ( "center_clock_x", "center_clock_y", "center_bars_x", "center_bars_y" ):
             self.center_content( action )
             return
-        if self.isMaximized(): self.showNormal()
+        if self.isMaximized():
+            self.showNormal()
         rect = self.geometry()
-        if action == "move_up": rect.translate( 0, -1 )
-        elif action == "move_down": rect.translate( 0, 1 )
-        elif action == "move_left": rect.translate( -1, 0 )
-        elif action == "move_right": rect.translate( 1, 0 )
-        elif action == "grow_top": rect.setTop( rect.top() - 1 )
-        elif action == "grow_bottom": rect.setBottom( rect.bottom() + 1 )
-        elif action == "grow_left": rect.setLeft( rect.left() - 1 )
-        elif action == "grow_right": rect.setRight( rect.right() + 1 )
-        elif action == "shrink_top": rect.setTop( rect.top() + 1 )
-        elif action == "shrink_bottom": rect.setBottom( rect.bottom() - 1 )
-        elif action == "shrink_left": rect.setLeft( rect.left() + 1 )
-        elif action == "shrink_right": rect.setRight( rect.right() - 1 )
+        if action == "move_up":
+            rect.translate( 0, -1 )
+        elif action == "move_down":
+            rect.translate( 0, 1 )
+        elif action == "move_left":
+            rect.translate( -1, 0 )
+        elif action == "move_right":
+            rect.translate( 1, 0 )
+        elif action == "grow_top":
+            rect.setTop( rect.top() - 1 )
+        elif action == "grow_bottom":
+            rect.setBottom( rect.bottom() + 1 )
+        elif action == "grow_left":
+            rect.setLeft( rect.left() - 1 )
+        elif action == "grow_right":
+            rect.setRight( rect.right() + 1 )
+        elif action == "shrink_top":
+            rect.setTop( rect.top() + 1 )
+        elif action == "shrink_bottom":
+            rect.setBottom( rect.bottom() - 1 )
+        elif action == "shrink_left":
+            rect.setLeft( rect.left() + 1 )
+        elif action == "shrink_right":
+            rect.setRight( rect.right() - 1 )
         self.setGeometry( rect )
 
     def center_window( self, action ):
         screen = QApplication.primaryScreen().availableGeometry()
         rect = self.geometry()
-        if action == "center_window_x": rect.moveLeft( screen.x() + ( screen.width() - rect.width() ) // 2 )
-        else: rect.moveTop( screen.y() + ( screen.height() - rect.height() ) // 2 )
+        if action == "center_window_x":
+            rect.moveLeft( screen.x() + ( screen.width() - rect.width() ) // 2 )
+        else:
+            rect.moveTop( screen.y() + ( screen.height() - rect.height() ) // 2 )
         self.setGeometry( rect )
 
     def center_content( self, action ):
@@ -631,11 +672,15 @@ class HUDWindow( QMainWindow ):
             metrics = QFontMetrics( font )
             fmt = "%H:%M:%S" if style.get( "clock_24h", True ) else "%I:%M:%S %p"
             text = datetime.datetime.now().strftime( fmt )
-            if action == "center_clock_x": self.settings_window.clock_x.setValue( round( ( canvas_width - metrics.horizontalAdvance( text ) ) / 2 ) )
-            else: self.settings_window.clock_y.setValue( round( ( canvas_height - metrics.height() ) / 2 ) )
+            if action == "center_clock_x":
+                self.settings_window.clock_x.setValue( round( ( canvas_width - metrics.horizontalAdvance( text ) ) / 2 ) )
+            else:
+                self.settings_window.clock_y.setValue( round( ( canvas_height - metrics.height() ) / 2 ) )
         else:
-            if action == "center_bars_x": self.settings_window.bar_x.setValue( round( ( canvas_width - style[ "bar_total_width" ] ) / 2 ) )
-            else: self.settings_window.bar_y.setValue( round( ( canvas_height - style[ "bar_height" ] ) / 2 ) )
+            if action == "center_bars_x":
+                self.settings_window.bar_x.setValue( round( ( canvas_width - style[ "bar_total_width" ] ) / 2 ) )
+            else:
+                self.settings_window.bar_y.setValue( round( ( canvas_height - style[ "bar_height" ] ) / 2 ) )
 
     def update_audio_ram( self, bands ):
         self.canvas.set_audio_bands( bands )
@@ -664,7 +709,8 @@ if __name__ == "__main__":
             audio_thread.audio_data_ready.connect( hud.update_audio_ram )
             audio_thread.devices_ready.connect( settings.populate_devices )
             audio_thread.stats_ready.connect( settings.update_audio_stats )
-            if settings.combo_device.currentText(): audio_thread.set_device( settings.combo_device.currentText() )
+            if settings.combo_device.currentText():
+                audio_thread.set_device( settings.combo_device.currentText() )
             audio_thread.start()
         else:
             if audio_thread:
@@ -674,7 +720,8 @@ if __name__ == "__main__":
             hud.update_audio_ram( [0] * settings.spin_bars.value() )
 
     def on_device_changed( device_name ):
-        if audio_thread and device_name: audio_thread.set_device( device_name )
+        if audio_thread and device_name:
+            audio_thread.set_device( device_name )
 
     def on_audio_params_changed( bars, sens, fps ):
         if audio_thread: audio_thread.update_parameters( bars, sens, fps )
